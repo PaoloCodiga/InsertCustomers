@@ -1,4 +1,4 @@
-﻿namespace InsertCustomers
+﻿namespace TCPOS.InsertCustomers.Forms
 {
     partial class customerDataImporterForm
     {

@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using Serilog;
 using System.IO;
+using System.Windows.Forms;
+using TCPOS.InsertCustomers.Domain;
 
-namespace InsertCustomers
+namespace TCPOS.InsertCustomers.Forms
 {
     public partial class customerDataImporterForm : Form
     {
@@ -37,9 +31,27 @@ namespace InsertCustomers
 
         private void ImportButton_Click()
         {
+            //// Configure Serilog (replace with your desired logging configuration)
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.File($"{this.fileNameTextBox.Text}_log.txt")
+                .CreateLogger();
+
+
             if (File.Exists(this.fileNameTextBox.Text))
             {
-                CsvFileReader.ReadCsvFile(this.fileNameTextBox.Text);
+                try
+                {
+                    var csvFileReader = new CsvFileReader(Log.Logger);
+                    csvFileReader.ReadCsvFile(this.fileNameTextBox.Text);
+                }
+                catch
+                {
+                    MessageBox.Show($"An error occurred during the import process.\r\nCheck {this.fileNameTextBox.Text}_log.txt for detail", "Error while Reading Csv", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    Log.CloseAndFlush(); //// Ensure all log events are written
+                }
             }
             else
             {

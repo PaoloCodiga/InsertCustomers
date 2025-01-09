@@ -1,11 +1,4 @@
-﻿using CsvHelper.Configuration.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace InsertCustomers
+﻿namespace TCPOS.InsertCustomers.Domain
 {
     public class Customer
     {
@@ -29,7 +22,19 @@ namespace InsertCustomers
 
         public string Email { get; private set; }
 
-        public RecordStatusEnum RecordStatus { get; set; } = RecordStatusEnum.Insert;
+        public override bool Equals(object obj)
+        {
+            if (obj is Customer other)
+            {
+                return CardNumber == other.CardNumber; //// Compare based on CardNumber
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return CardNumber.GetHashCode(); //// Use CardNumber for hash code generation
+        }
 
     }
 }
