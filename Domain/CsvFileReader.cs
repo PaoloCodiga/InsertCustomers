@@ -24,18 +24,18 @@ namespace TCPOS.InsertCustomers.Domain
             var customerHashSet = new HashSet<Customer>();
             try
             {
-                var a = Convert.ToInt16(customerHashSet.First().Email);
                 using (var streamReader = new StreamReader(filePath))
                 {
                     using (var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture))
                     {
-                        csvReader.Context.RegisterClassMap<CustomerMap>(); //// Register the mapping class
+                        //// Register the mapping class
+                        csvReader.Context.RegisterClassMap<CustomerMap>();
 
                         customerHashSet = new HashSet<Customer>(csvReader.GetRecords<Customer>().ToList());
                         var customerList = new List<Customer>(customerHashSet.ToList());
                         
                         this.PrepareDataBeforeInsertAndUpdate(customerList);
-                        CustomerRepository.BulkInsertOrUpdateCustomersAsync(customerList).Wait();
+                        new CustomerRepository().BulkInsertOrUpdateCustomersAsync(customerList);
                     }
                 }
             }
@@ -48,7 +48,7 @@ namespace TCPOS.InsertCustomers.Domain
 
         private void PrepareDataBeforeInsertAndUpdate(IList<Customer> customerList)
         {
-            //// Validate and repair each property of objects from the records
+            //// Preperation of Balance according to CardType
             foreach (var customer in customerList)
             {
                 if (customer.CardType == 1)

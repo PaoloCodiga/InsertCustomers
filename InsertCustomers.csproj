@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{3BC4573D-1AB5-4220-B7AF-F200EBF6572A}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>InsertCustomers</RootNamespace>
+    <RootNamespace>TCPOS.InsertCustomers</RootNamespace>
     <AssemblyName>InsertCustomers</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -107,6 +107,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

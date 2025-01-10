@@ -31,7 +31,7 @@ namespace TCPOS.InsertCustomers.Forms
 
         private void ImportButton_Click()
         {
-            //// Configure Serilog (replace with your desired logging configuration)
+            //// Configure Serilog
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.File($"{this.fileNameTextBox.Text}_log.txt")
                 .CreateLogger();
@@ -46,7 +46,10 @@ namespace TCPOS.InsertCustomers.Forms
                 }
                 catch
                 {
-                    MessageBox.Show($"An error occurred during the import process.\r\nCheck {this.fileNameTextBox.Text}_log.txt for detail", "Error while Reading Csv", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("An error occurred during the import process.\r\n" +
+                        $"Check {this.fileNameTextBox.Text}_log.txt for detail", "Error while Reading Csv",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 }
                 finally
                 {

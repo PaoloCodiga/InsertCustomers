@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -15,14 +16,14 @@ namespace TCPOS.InsertCustomers.Persistence
         /// </summary>
         /// <param name="customerList"></param>
         /// <returns></returns>
-        public static async Task BulkInsertOrUpdateCustomersAsync(IList<Customer> customerList)
+        public void BulkInsertOrUpdateCustomersAsync(IList<Customer> customerList)
         {
             var connectionString = ConfigurationManager.ConnectionStrings["DefaultConnectionString"].ConnectionString;
-            var dataTable = CreateDataTable(customerList);
+            var dataTable = this.CreateDataTable(customerList);
 
             using (var sqlConnection = new SqlConnection(connectionString))
             {
-                await sqlConnection.OpenAsync();
+                sqlConnection.Open();
                 using (var sqlTransaction = sqlConnection.BeginTransaction())
                 {
                     try
@@ -43,14 +44,14 @@ namespace TCPOS.InsertCustomers.Persistence
 
                         using (var sqlCommand = new SqlCommand(createTempTableCommand, sqlConnection, sqlTransaction))
                         {
-                            await sqlCommand.ExecuteNonQueryAsync();
+                            sqlCommand.ExecuteNonQuery();
                         }
 
                         //// Bulk copy data to temporary table
                         using (var bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, sqlTransaction))
                         {
                             bulkCopy.DestinationTableName = "#TempCustomers";
-                            await bulkCopy.WriteToServerAsync(dataTable);
+                            bulkCopy.WriteToServer(dataTable);
                         }
 
                         //// Merge temporary table with target (customers) table
@@ -58,19 +59,19 @@ namespace TCPOS.InsertCustomers.Persistence
                         //// If a match is found(WHEN MATCHED), it updates the existing records.
                         //// If no match is found(WHEN NOT MATCHED BY TARGET), it inserts new records.
                         var mergeCommandText = @"
-                            MERGE INTO Customers AS target
+                            MERGE INTO customers AS target
                             USING #TempCustomers AS source
                             ON target.card_num = source.card_num
                             WHEN MATCHED THEN
                                 UPDATE SET 
                                     target.code = source.code,
-                                    target.description = source.description
-                                    target.notes1 = source.notes1
-                                    target.card_type = source.card_type
-                                    target.prepay_balance_cash = source.prepay_balance_cash
-                                    target.credit_balance = source.credit_balance
-                                    target.credit_limit = source.credit_limit
-                                    target.fiscal_code = source.fiscal_code
+                                    target.description = source.description,
+                                    target.notes1 = source.notes1,
+                                    target.card_type = source.card_type,
+                                    target.prepay_balance_cash = source.prepay_balance_cash,
+                                    target.credit_balance = source.credit_balance,
+                                    target.credit_limit = source.credit_limit,
+                                    target.fiscal_code = source.fiscal_code,
                                     target.email = source.email
                             WHEN NOT MATCHED BY TARGET THEN
                                 INSERT (
@@ -94,18 +95,20 @@ namespace TCPOS.InsertCustomers.Persistence
                                     source.credit_balance,
                                     source.credit_limit,
                                     source.fiscal_code,
-                                    source.email );";
+                                    source.email );
+
+                                DROP TABLE #TempCustomers;";
 
                         using (var mergeCommand = new SqlCommand(mergeCommandText, sqlConnection, sqlTransaction))
                         {
-                            await mergeCommand.ExecuteNonQueryAsync();
+                            mergeCommand.ExecuteNonQuery();
                         }
 
                         //// Commit transaction
                         //// Bulk insert and update completed successfully.
                         sqlTransaction.Commit();
                     }
-                    catch
+                    catch(Exception ex)
                     {
                         //// Rollback transaction when error encountered
                         sqlTransaction.Rollback();
@@ -114,7 +117,7 @@ namespace TCPOS.InsertCustomers.Persistence
             }
         }
 
-        private static DataTable CreateDataTable(IList<Customer> customerList)
+        private DataTable CreateDataTable(IList<Customer> customerList)
         {
             var dataTable = new DataTable();
             dataTable.Columns.Add("code", typeof(string));
@@ -124,22 +127,22 @@ namespace TCPOS.InsertCustomers.Persistence
             dataTable.Columns.Add("card_type", typeof(int));
             dataTable.Columns.Add("prepay_balance_cash", typeof(decimal));
             dataTable.Columns.Add("credit_balance", typeof(decimal));
-            dataTable.Columns.Add("credit_limit", typeof(decimal?));
+            dataTable.Columns.Add("credit_limit", typeof(decimal));
             dataTable.Columns.Add("fiscal_code", typeof(string));
             dataTable.Columns.Add("email", typeof(string));
 
             //// Map each customer to DataRow
             foreach (var customer in customerList)
             {
-                dataTable.Rows.Add(MapToRow(customer));
+                dataTable.Rows.Add(this.MapToRow(customer, dataTable));
             }
 
             return dataTable;
         }
 
-        private static DataRow MapToRow(Customer customer)
+        private DataRow MapToRow(Customer customer, DataTable dataTable)
         {
-            var row = new DataTable().NewRow();
+            var row = dataTable.NewRow();
             row["code"] = customer.Code;
             row["card_num"] = customer.CardNumber;
             row["description"] = customer.Description;
