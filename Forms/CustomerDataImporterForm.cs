@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows.Forms;
 using TCPOS.InsertCustomers.Domain;
+using TCPOS.InsertCustomers.Utils;
 
 namespace TCPOS.InsertCustomers.Forms
 {
@@ -31,18 +32,22 @@ namespace TCPOS.InsertCustomers.Forms
 
         private void ImportButton_Click()
         {
-            //// Configure Serilog
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.File($"{this.fileNameTextBox.Text}_log.txt")
-                .CreateLogger();
-
+            LogUtil.InitLogger();
+            Log.Logger.Information($"**************************************************");
+            Log.Logger.Information($"*****    Program InsertCustomers started     *****");
+            Log.Logger.Information($"**************************************************");
+            Log.Logger.Information($"Importing process starts....");
 
             if (File.Exists(this.fileNameTextBox.Text))
             {
                 try
                 {
-                    var csvFileReader = new CsvFileReader(Log.Logger);
+                    var csvFileReader = new CsvFileReader();
                     csvFileReader.ReadCsvFile(this.fileNameTextBox.Text);
+
+                    Log.Logger.Information($"Importing process completes....");
+
+                    MessageBox.Show("Importing has completed!", "Importing Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch
                 {
@@ -53,11 +58,17 @@ namespace TCPOS.InsertCustomers.Forms
                 }
                 finally
                 {
-                    Log.CloseAndFlush(); //// Ensure all log events are written
+                    //// Ensure all log events are written
+                    Log.CloseAndFlush();
                 }
             }
             else
             {
+                Log.Logger.Error($"Importing process fails because file not exists....");
+
+                //// Ensure all log events are written
+                Log.CloseAndFlush();
+
                 MessageBox.Show("File does not exist!", "Select Correct File...", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

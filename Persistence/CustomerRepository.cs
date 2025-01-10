@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Threading.Tasks;
 using TCPOS.InsertCustomers.Domain;
 
 namespace TCPOS.InsertCustomers.Persistence
@@ -18,12 +18,16 @@ namespace TCPOS.InsertCustomers.Persistence
         /// <returns></returns>
         public void BulkInsertOrUpdateCustomersAsync(IList<Customer> customerList)
         {
+            Log.Logger.Information($"Trying to insert/update data into customers database....");
+
             var connectionString = ConfigurationManager.ConnectionStrings["DefaultConnectionString"].ConnectionString;
             var dataTable = this.CreateDataTable(customerList);
 
             using (var sqlConnection = new SqlConnection(connectionString))
             {
                 sqlConnection.Open();
+
+                Log.Logger.Information($"Open Sql Connection ....");
                 using (var sqlTransaction = sqlConnection.BeginTransaction())
                 {
                     try
@@ -47,12 +51,19 @@ namespace TCPOS.InsertCustomers.Persistence
                             sqlCommand.ExecuteNonQuery();
                         }
 
+                        Log.Logger.Information($"Creating TempTable Completes....");
+
                         //// Bulk copy data to temporary table
                         using (var bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, sqlTransaction))
                         {
                             bulkCopy.DestinationTableName = "#TempCustomers";
+
+                            Log.Logger.Information($"Copying data to TempTable starts....");
+
                             bulkCopy.WriteToServer(dataTable);
                         }
+
+                        Log.Logger.Information($"Copying data to TempTable Completes");
 
                         //// Merge temporary table with target (customers) table
                         //// The MERGE statement compares the records in the main table (customers) with the temporary table (#TempCustomers).
@@ -101,17 +112,26 @@ namespace TCPOS.InsertCustomers.Persistence
 
                         using (var mergeCommand = new SqlCommand(mergeCommandText, sqlConnection, sqlTransaction))
                         {
+                            Log.Logger.Information($"Merging data to Customers table starts....");
                             mergeCommand.ExecuteNonQuery();
+                            Log.Logger.Information($"Merging data to Customers table completes....");
                         }
 
                         //// Commit transaction
                         //// Bulk insert and update completed successfully.
                         sqlTransaction.Commit();
+                        Log.Logger.Information($"Committed Sql Transaction....");
                     }
                     catch(Exception ex)
                     {
+                        Log.Logger.Error(ex, $"Error occured....");
+
                         //// Rollback transaction when error encountered
                         sqlTransaction.Rollback();
+
+                        Log.Logger.Information($"");
+                        Log.Logger.Information($"Rollback Sql Transaction completed....");
+                        throw;
                     }
                 }
             }

@@ -11,17 +11,14 @@ namespace TCPOS.InsertCustomers.Domain
 {
     public class CsvFileReader
     {
-        private ILogger logger;
-
-        public CsvFileReader(ILogger logger)
-        {
-            this.logger = logger;
-        }
-
         public void ReadCsvFile(string filePath)
         {
+            Log.Logger.Information($"Reading Csv File starts....");
+
             //// using HashSet to avoid duplicate data in records
             var customerHashSet = new HashSet<Customer>();
+            var customerList = new List<Customer>();
+
             try
             {
                 using (var streamReader = new StreamReader(filePath))
@@ -31,19 +28,26 @@ namespace TCPOS.InsertCustomers.Domain
                         //// Register the mapping class
                         csvReader.Context.RegisterClassMap<CustomerMap>();
 
+                        Log.Logger.Information($"CsvReader Registering ClassMap has finished....");
+                        Log.Logger.Information($"Getting records from Csv file starts....");
+
                         customerHashSet = new HashSet<Customer>(csvReader.GetRecords<Customer>().ToList());
-                        var customerList = new List<Customer>(customerHashSet.ToList());
-                        
+
+                        Log.Logger.Information($"Getting records from Csv file has finished....");
+
+                        customerList = new List<Customer>(customerHashSet.ToList());
                         this.PrepareDataBeforeInsertAndUpdate(customerList);
-                        new CustomerRepository().BulkInsertOrUpdateCustomersAsync(customerList);
+                        
                     }
                 }
             }
             catch(Exception ex)
             {
-                logger.Error(ex, $"Error importing CSV file: {filePath}");
+                Log.Logger.Error(ex, $"Error importing CSV file: {filePath}");
                 throw;
             }
+
+            new CustomerRepository().BulkInsertOrUpdateCustomersAsync(customerList);
         }
 
         private void PrepareDataBeforeInsertAndUpdate(IList<Customer> customerList)
