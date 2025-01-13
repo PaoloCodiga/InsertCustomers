@@ -7,8 +7,8 @@ namespace TCPOS.InsertCustomers.Utils
         /// <param name="value"></param>
         /// <returns>Return value with three decimal places if the value has more than three decimal places.
         /// Otherwise return the original value</returns>
-        public static decimal? ConcactToThreeDecimalPlaces(string input) => string.IsNullOrEmpty(input)
-            ? default(decimal?)
+        public static decimal ConcactToThreeDecimalPlaces(string input) => string.IsNullOrEmpty(input)
+            ? default(decimal)
             : decimal.Parse(InnerConcactToThreeDecimalPlaces(input));
 
         /// <summary>

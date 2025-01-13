@@ -26,7 +26,8 @@ namespace TCPOS.InsertCustomers.Domain
             //// Skip the record if the length is greater than 40
             Map(m => m.Notes1)
                 .Validate(field => field.Field.Length <= 40)
-                .Name("Comment");
+                .Name("Comment")
+                .Default((string)null);
 
             //// Skip the record if the value is null or empty or white space or not 1 and 2
             Map(m => m.CardType)
@@ -35,39 +36,41 @@ namespace TCPOS.InsertCustomers.Domain
                     && (int.Parse(field.Field) == 1 || int.Parse(field.Field) == 2))
                 .Name("TypeOfCard");
 
-            //// Skip the record if the value is null or empty or alphabet or value is not between 0 and 999999999999999.999
+            //// Skip the record if the value is null or empty or alphabet or value is not between 0 and 999999999999.999
             Map(m => m.PrepayBalanceCash)
                 .Validate(field => string.IsNullOrEmpty(field.Field)
                     || (decimal.TryParse(field.Field, out _)
-                       && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999999.999M)))
+                       && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999.999M)))
                 .Name("Balance")
                 .Default(0);
 
-            //// Skip the record if the value is null or empty or alphabet or value is not between 0 and 999999999999999.999
+            //// Skip the record if the value is null or empty or alphabet or value is not between 0 and 999999999999.999
             Map(m => m.CreditBalance)
                 .Validate(field => string.IsNullOrEmpty(field.Field)
                     || (decimal.TryParse(field.Field, out _)
-                        && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999999.999M)))
+                        && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999.999M)))
                 .Name("Balance")
                 .Default(0);
 
-            //// Skip the record if the value is white space or not between 0 and 999999999999999.999
+            //// Skip the record if the value is white space or not between 0 and 999999999999.999
             Map(m => m.CreditLimit)
                 .Validate(field => string.IsNullOrEmpty(field.Field)
                     || (decimal.TryParse(field.Field, out _)
-                        && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999999.999M)))
+                        && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999.999M)))
                 .Name("CreditLimit")
-                .Default((decimal?)null);
+                .Default(0M);
 
             //// Skip the record if the length is greater than 20
             Map(m => m.FiscalCode)
                 .Validate(field => field.Field.Length <= 20)
-                .Name("SalaryID");
+                .Name("SalaryID")
+                .Default((string)null);
 
             //// Skip the record if the length is greater than 100
             Map(m => m.Email)
                 .Validate(field => field.Field.Length <= 100)
-                .Name("Email");
+                .Name("Email")
+                .Default((string)null);
         }
     }
 }

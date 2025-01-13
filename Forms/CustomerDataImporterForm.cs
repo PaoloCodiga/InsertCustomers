@@ -2,6 +2,7 @@
 using System;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using TCPOS.InsertCustomers.Domain;
 using TCPOS.InsertCustomers.Utils;

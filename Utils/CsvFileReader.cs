@@ -13,14 +13,19 @@ namespace TCPOS.InsertCustomers.Domain
     {
         public void ReadCsvFile(string filePath)
         {
-            Log.Logger.Information($"Reading Csv File starts....");
+            Log.Logger.Information($"Reading Csv File....");
 
             //// using HashSet to avoid duplicate data in records
             var customerHashSet = new HashSet<Customer>();
             var customerList = new List<Customer>();
             var errorRecordCount = 1;
+            var customerRepository = new CustomerRepository();
+
             try
             {
+                var distinctCardNumberList = customerRepository.GetAllDistinctCardNumbers();
+                var nextId = customerRepository.GetNextId();
+
                 using (var streamReader = new StreamReader(filePath))
                 {
                     using (var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture))
@@ -29,14 +34,17 @@ namespace TCPOS.InsertCustomers.Domain
                         csvReader.Context.RegisterClassMap<CustomerMap>();
 
                         Log.Logger.Information($"CsvReader Registering ClassMap has finished....");
-                        Log.Logger.Information($"Getting records from Csv file starts....");
+                        Log.Logger.Information($"Getting records from Csv file....");
 
                         while (csvReader.Read())
                         {
                             try
                             {
                                 var record = csvReader.GetRecord<Customer>();
-                                customerHashSet.Add(record); //// Only add valid records
+                                record.PrepareDataBeforeInsertAndUpdate(!distinctCardNumberList.Contains(record.CardNumber), ref nextId);
+
+                                //// Only add valid records
+                                customerHashSet.Add(record);
                             }
                             catch (CsvHelper.FieldValidationException ex)
                             {
@@ -45,10 +53,9 @@ namespace TCPOS.InsertCustomers.Domain
                             }
                         }
 
-                        Log.Logger.Information($"Getting records from Csv file has finished....");
+                        Log.Logger.Information($"Getting records from Csv file completes....");
 
                         customerList = new List<Customer>(customerHashSet.ToList());
-                        customerList.ForEach(customer => customer.PrepareDataBeforeInsertAndUpdate());
 
                     }
                 }
@@ -61,7 +68,7 @@ namespace TCPOS.InsertCustomers.Domain
 
             if (customerList.Any())
             {
-                new CustomerRepository().BulkInsertOrUpdateCustomersAsync(customerList);
+                customerRepository.BulkInsertOrUpdateCustomers(customerList);
             }
             else
             {
