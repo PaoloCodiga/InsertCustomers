@@ -95,8 +95,9 @@
     <Compile Include="Persistence\CustomerRepository.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Domain\CsvFileReader.cs" />
+    <Compile Include="Utils\CsvFileReader.cs" />
     <Compile Include="Utils\LogUtil.cs" />
+    <Compile Include="Utils\ValueCheckerAndConverter.cs" />
     <EmbeddedResource Include="Forms\CustomerDataImporterForm.resx">
       <DependentUpon>CustomerDataImporterForm.cs</DependentUpon>
     </EmbeddedResource>

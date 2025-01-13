@@ -1,4 +1,6 @@
-﻿namespace TCPOS.InsertCustomers.Domain
+﻿using TCPOS.InsertCustomers.Utils;
+
+namespace TCPOS.InsertCustomers.Domain
 {
     public class Customer
     {
@@ -20,7 +22,24 @@
 
         public string FiscalCode { get; set; }
 
-        public string Email { get; private set; }
+        public string Email { get; set; }
+
+        public void PrepareDataBeforeInsertAndUpdate()
+        {
+            //// Preperation of Balance according to CardType
+            if (this.CardType == 1)
+            {
+                this.PrepayBalanceCash = 0;
+                this.CreditBalance = ValueCheckerAndConverter.ConcactToThreeDecimalPlaces(this.CreditBalance.ToString()) ?? 0;
+            }
+            else
+            {
+                this.CreditBalance = 0;
+                this.PrepayBalanceCash = ValueCheckerAndConverter.ConcactToThreeDecimalPlaces(this.PrepayBalanceCash.ToString()) ?? 0;
+            }
+
+            this.CreditLimit = ValueCheckerAndConverter.ConcactToThreeDecimalPlaces(this.CreditLimit?.ToString());
+        }
 
         public override bool Equals(object obj)
         {

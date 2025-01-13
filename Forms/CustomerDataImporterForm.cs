@@ -1,4 +1,6 @@
 ﻿using Serilog;
+using System;
+using System.Configuration;
 using System.IO;
 using System.Windows.Forms;
 using TCPOS.InsertCustomers.Domain;
@@ -52,7 +54,7 @@ namespace TCPOS.InsertCustomers.Forms
                 catch
                 {
                     MessageBox.Show("An error occurred during the import process.\r\n" +
-                        $"Check {this.fileNameTextBox.Text}_log.txt for detail", "Error while Reading Csv",
+                        $"Check {Environment.CurrentDirectory + ConfigurationManager.AppSettings["logFile"]}DebugLogs-{DateTime.Today:yyyyMMdd}.Log for detail", "Error",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
                 }

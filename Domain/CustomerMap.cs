@@ -1,5 +1,5 @@
 ﻿using CsvHelper.Configuration;
-using System;
+using TCPOS.InsertCustomers.Utils;
 
 namespace TCPOS.InsertCustomers.Domain
 {
@@ -9,16 +9,12 @@ namespace TCPOS.InsertCustomers.Domain
         {
             //// Skip the record if the value is null or length is greater than 30
             Map(m => m.Code)
-                .Validate(field => !string.IsNullOrEmpty(field.Field)
-                    && !string.IsNullOrWhiteSpace(field.Field)
-                    && field.Field.Length <= 30)
+                .Validate(field => !ValueCheckerAndConverter.IsNullOrEmptyOrWhiteSpace(field.Field) && field.Field.Length <= 30)
                 .Name("ID");
 
             //// Skip the record if the value is null or length is greater than 32
             Map(m => m.CardNumber)
-                .Validate(field => !string.IsNullOrEmpty(field.Field) 
-                    && !string.IsNullOrWhiteSpace(field.Field) 
-                    && field.Field.Length <= 32)
+                .Validate(field => !ValueCheckerAndConverter.IsNullOrEmptyOrWhiteSpace(field.Field) && field.Field.Length <= 32)
                 .Name("ID");
 
             //// Skip the record if the value is null or length is greater than 40
@@ -32,30 +28,34 @@ namespace TCPOS.InsertCustomers.Domain
                 .Validate(field => field.Field.Length <= 40)
                 .Name("Comment");
 
-            // Skip the record if the value is null or value is not 1 and 2
+            //// Skip the record if the value is null or empty or white space or not 1 and 2
             Map(m => m.CardType)
-                .Validate(field => !string.IsNullOrEmpty(field.Field) 
-                    && (Convert.ToInt32(field.Field) == 1 || Convert.ToInt32(field.Field) == 2))
+                .Validate(field => !ValueCheckerAndConverter.IsNullOrEmptyOrWhiteSpace(field.Field)
+                    && int.TryParse(field.Field, out _)
+                    && (int.Parse(field.Field) == 1 || int.Parse(field.Field) == 2))
                 .Name("TypeOfCard");
 
-            //// Skip the record if the value is not between 0 and 999999999999999.999
+            //// Skip the record if the value is null or empty or alphabet or value is not between 0 and 999999999999999.999
             Map(m => m.PrepayBalanceCash)
-                .Validate(field => Convert.ToDecimal(this.Get0IfStringIsNullOrEmpty(field.Field)) >= 0 
-                    && Convert.ToDouble(this.Get0IfStringIsNullOrEmpty(field.Field)) <= 999999999999999.999)
+                .Validate(field => string.IsNullOrEmpty(field.Field)
+                    || (decimal.TryParse(field.Field, out _)
+                       && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999999.999M)))
                 .Name("Balance")
                 .Default(0);
 
-            //// Skip the record if the value is not between 0 and 999999999999999.999
+            //// Skip the record if the value is null or empty or alphabet or value is not between 0 and 999999999999999.999
             Map(m => m.CreditBalance)
-                .Validate(field => Convert.ToDecimal(this.Get0IfStringIsNullOrEmpty(field.Field)) >= 0 
-                    && Convert.ToDouble(this.Get0IfStringIsNullOrEmpty(field.Field)) <= 999999999999999.999)
+                .Validate(field => string.IsNullOrEmpty(field.Field)
+                    || (decimal.TryParse(field.Field, out _)
+                        && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999999.999M)))
                 .Name("Balance")
                 .Default(0);
 
-            //// Skip the record if the value is not between 0 and 999999999999999.999
+            //// Skip the record if the value is white space or not between 0 and 999999999999999.999
             Map(m => m.CreditLimit)
-                .Validate(field => Convert.ToDecimal(this.Get0IfStringIsNullOrEmpty(field.Field)) >= 0 
-                    && Convert.ToDouble(this.Get0IfStringIsNullOrEmpty(field.Field)) <= 999999999999999.999)
+                .Validate(field => string.IsNullOrEmpty(field.Field)
+                    || (decimal.TryParse(field.Field, out _)
+                        && ValueCheckerAndConverter.IsBetweenRange(decimal.Parse(field.Field), 0M, 999999999999999.999M)))
                 .Name("CreditLimit")
                 .Default((decimal?)null);
 
@@ -69,7 +69,5 @@ namespace TCPOS.InsertCustomers.Domain
                 .Validate(field => field.Field.Length <= 100)
                 .Name("Email");
         }
-
-        private string Get0IfStringIsNullOrEmpty(string input) => string.IsNullOrEmpty(input) ? "0" : input; 
     }
 }

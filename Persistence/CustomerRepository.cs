@@ -72,7 +72,7 @@ namespace TCPOS.InsertCustomers.Persistence
                         var mergeCommandText = @"
                             MERGE INTO customers AS target
                             USING #TempCustomers AS source
-                            ON target.card_num = source.card_num
+                            ON target.card_num = source.card_num COLLATE SQL_Latin1_General_CP1_CI_AS
                             WHEN MATCHED THEN
                                 UPDATE SET 
                                     target.code = source.code,

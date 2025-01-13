@@ -18,7 +18,7 @@ namespace TCPOS.InsertCustomers.Domain
             //// using HashSet to avoid duplicate data in records
             var customerHashSet = new HashSet<Customer>();
             var customerList = new List<Customer>();
-
+            var errorRecordCount = 1;
             try
             {
                 using (var streamReader = new StreamReader(filePath))
@@ -31,13 +31,25 @@ namespace TCPOS.InsertCustomers.Domain
                         Log.Logger.Information($"CsvReader Registering ClassMap has finished....");
                         Log.Logger.Information($"Getting records from Csv file starts....");
 
-                        customerHashSet = new HashSet<Customer>(csvReader.GetRecords<Customer>().ToList());
+                        while (csvReader.Read())
+                        {
+                            try
+                            {
+                                var record = csvReader.GetRecord<Customer>();
+                                customerHashSet.Add(record); //// Only add valid records
+                            }
+                            catch (CsvHelper.FieldValidationException ex)
+                            {
+                                //// Skip this record and continue with the next one
+                                Log.Logger.Error($"{errorRecordCount++}.....Skipping invalid record: {ex.Message}");
+                            }
+                        }
 
                         Log.Logger.Information($"Getting records from Csv file has finished....");
 
                         customerList = new List<Customer>(customerHashSet.ToList());
-                        this.PrepareDataBeforeInsertAndUpdate(customerList);
-                        
+                        customerList.ForEach(customer => customer.PrepareDataBeforeInsertAndUpdate());
+
                     }
                 }
             }
@@ -47,22 +59,13 @@ namespace TCPOS.InsertCustomers.Domain
                 throw;
             }
 
-            new CustomerRepository().BulkInsertOrUpdateCustomersAsync(customerList);
-        }
-
-        private void PrepareDataBeforeInsertAndUpdate(IList<Customer> customerList)
-        {
-            //// Preperation of Balance according to CardType
-            foreach (var customer in customerList)
+            if (customerList.Any())
             {
-                if (customer.CardType == 1)
-                {
-                    customer.PrepayBalanceCash = 0;
-                }
-                else
-                {
-                    customer.CreditBalance = 0;
-                }
+                new CustomerRepository().BulkInsertOrUpdateCustomersAsync(customerList);
+            }
+            else
+            {
+                Log.Logger.Warning($"There is not valid record to import....");
             }
         }
     }
